@@ -19,13 +19,45 @@ let month = date.getMonth() + 1;
 let year = date.getFullYear();
 let currentDate = `${month}-${day}-${year}`
 
-let storageArr = []
+let history = []
 
-const getGeo = () => {
+//this function will get the history from local storage and display it on the page
+const getHistory = () => {
 
-    let inputValue = inputText.value 
+    let history = []
+    
+
+    localStorage.getItem('searchedCities')
+
+    if (localStorage.getItem('searchedCities') === null || localStorage.getItem('searchedCities') === undefined) {
+        history = []
+    } else {
+
+        history = localStorage.getItem('searchedCities').split(',')
+        
+        //this loops over the history array and creates a button for each item in the array that calls the geo function
+        for (i = 0; i < history.length; i ++) {
+
+            let newButton = document.createElement('button')
+            
+            newButton.textContent = history[i]
+
+            newButton.addEventListener('click', (function (e) {
+                getGeo(this.textContent)
+            }))
+
+            previousSearch.appendChild(newButton)
+        }
+
+    }
+}
+
+//this takes the input value and calls the geo function, using the input value as the parameter for the api call
+const getGeo = (inputValue) => {
+ 
     inputText.value = ''
 
+    //this fetch gets the lat and lon of the city that was searched for
     fetch(`${GEO_URL}${inputValue}&limit=1&appid=${API_KEY}`).then
         (res => {
             if (res.status > 400) {
@@ -37,15 +69,16 @@ const getGeo = () => {
         let lat = data[0].lat
         let lon = data[0].lon
 
-        storageArr.push(inputValue)
-        localStorage.setItem('searchedCities', storageArr)
+        //and pushes the city name to the history array and local storage
+        history.push(inputValue)
+        localStorage.setItem('searchedCities', history)
 
         getWeather(lat, lon)
     })
 }
 
 const getWeather = (lat, lon) => {
-
+    //this one gets the current weather for the city that was searched for
     fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=imperial&appid=${API_KEY}`).then
     ((res) => {
         if (res.status > 400) {
@@ -62,6 +95,7 @@ const getWeather = (lat, lon) => {
         currentWind.innerHTML = `Wind Speed: ${data.wind.speed} MPH`
     });
 
+    //and this one gets the 5 day forecast
     fetch(`${BASE_URL}${lat}&lon=${lon}&units=imperial&appid=${API_KEY}`).then
         ((res) => {
             if (res.status > 400) {
@@ -69,7 +103,7 @@ const getWeather = (lat, lon) => {
             }
         return res.json()
     }).then((data) => {
-
+        //this is how i chose to get the 5 day forecast. i'm sure there's a better way to do it, but this is what i came up with given it gives the forecast in 4 hour increments
         let forecastArr = []
 
         let dayOne = {date: data.list[0].dt_txt, icon: data.list[0].weather[0].icon, temp: data.list[0].main.temp, wind: data.list[0].wind.speed, hum: data.list[0].main.humidity};
@@ -79,7 +113,7 @@ const getWeather = (lat, lon) => {
         let dayFive = {date: data.list[32].dt_txt, icon: data.list[32].weather[0].icon, temp: data.list[32].main.temp, wind: data.list[32].wind.speed, hum: data.list[32].main.humidity}
 
         forecastArr.push(dayOne, dayTwo, dayThree, dayFour, dayFive)
-
+        //makes the cards for the forecast and displays them
         for (i=0; i<forecastArr.length; i++) {
             
             let newDiv = document.createElement('div')
@@ -96,20 +130,19 @@ const getWeather = (lat, lon) => {
             `
             newDiv.appendChild(newImg)
             forecastCards.appendChild(newDiv)
+
+            getHistory()
         }
     })
 }
 
-const getHistory = () => {
+searchbtn.addEventListener('click', (function (e) {
+    e.preventDefault()
 
-    if(localStorage.getItem('searchedCities' == null)) {
-        let cityString = JSON.stringify(storageArr)
-        localStorage.setItem('searchedCities', cityString)
-    }
+    let search = inputText.value 
+    getGeo(search)
+}) 
 
-
-}
-
-searchbtn.addEventListener('click', getGeo)
+)
 
 getHistory()
