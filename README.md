@@ -8,3 +8,4 @@ This  website allows you to search for your city and get the current weather, as
 [Github Repository](https://github.com/NotEnoughBacon/Weather-Dashboard)
 
 ## Screenshots
+![image](https://user-images.githubusercontent.com/16601941/234414372-5ca557fa-b6ca-4db9-88c5-8318dbc142cb.png)
